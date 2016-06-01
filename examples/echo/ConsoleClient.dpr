@@ -1,3 +1,5 @@
+{
+
 Copyright (c) 2016, Prometheus <prometheus@unterderbruecke.de>
 All rights reserved.
 
@@ -25,3 +27,73 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+}
+
+program ConsoleClient;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+uses
+  System.SysUtils,
+  LibreSsl.Interfaces in 'LibreSsl.Interfaces.pas',
+  LibreSsl.Tls in 'LibreSsl.Tls.pas',
+  LibreSsl.TlsApi in 'LibreSsl.TlsApi.pas',
+  LibreSsl.TlsConfig in 'LibreSsl.TlsConfig.pas',
+  LibreSsl.TlsPeerCert in 'LibreSsl.TlsPeerCert.pas';
+
+function ReadUtf8String(const ATls: ITls): string;
+var
+  Buffer: TBytes;
+  Len: NativeInt;
+begin
+  SetLength(Buffer, 1000);
+  Len := ATls.Read(Buffer);
+  SetLength(Buffer, Len);
+  Result := TEncoding.UTF8.GetString(Buffer);
+end;
+
+procedure WriteUtf8String(const ATls: ITls; const S: string);
+begin
+  ATls.Write(TEncoding.UTF8.GetBytes(S));
+end;
+
+procedure Client;
+const
+  GreetingMsg = 'HELLO TLS SERVER!'#10;
+var
+  Config: ITLsConfig;
+  Tls: ITLs;
+  S: string;
+begin
+  Config := TTlsConfig.Create as ITlsConfig;
+	Config.InsecureNoverifycert;
+	Config.InsecureNoverifyname;
+
+  Tls := TTls.Create(False, Config);
+  Tls.Connect('localhost', '9000');
+  WriteUtf8String(Tls, GreetingMsg);
+  WriteLn(Trim(ReadUtf8String(Tls)));
+
+  while True do
+  begin
+    ReadLn(S);
+    WriteUtf8String(Tls, S);
+    WriteLn(Trim(ReadUtf8String(Tls)));
+  end;
+
+  Tls.Close;
+end;
+
+begin
+  try
+    Client;
+    ReadLn;
+  except
+    on E: Exception do
+      Writeln(E.ClassName, ': ', E.Message);
+  end;
+end.
+
