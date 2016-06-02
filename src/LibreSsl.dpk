@@ -30,59 +30,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 }
 
-program ConsoleClient;
+package LibreSsl;
 
-{$APPTYPE CONSOLE}
 {$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LibreSSL - libtls'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
 
-uses
-  System.SysUtils,
-  LibreSsl.Interfaces,
-  LibreSsl.Tls,
-  LibreSsl.TlsConfig',
-  Utils in 'Utils.pas';
+requires
+  rtl;
 
-procedure Client;
-const
-  GreetingMsg = 'HELLO TLS SERVER!'#10;
-var
-  Config: ITLsConfig;
-  Tls: ITLs;
-  S: string;
-begin
-  Config := TTlsConfig.Create as ITLsConfig;
-  Config.InsecureNoverifycert;
-  Config.InsecureNoverifyname;
-
-  Tls := TTls.Create(False, Config);
-  Tls.Connect('localhost', '9000');
-  WriteUtf8String(Tls, GreetingMsg);
-  Log(ReadUtf8String(Tls));
-
-  while True do
-  begin
-    ReadLn(S);
-    if Trim(S) = '' then
-    begin
-      Break;
-    end;
-    WriteUtf8String(Tls, S);
-    Log(ReadUtf8String(Tls));
-  end;
-
-  Tls.Close;
-end;
-
-begin
-  try
-    Client;
-  except
-    on E: Exception do
-    begin
-      WriteLn(E.ClassName, ': ', E.Message);
-    end;
-  end;
-  WriteLn('Press enter to exit');
-  ReadLn;
+contains
+  LibreSsl.Interfaces in 'Units\LibreSsl.Interfaces.pas',
+  LibreSsl.Tls in 'Units\LibreSsl.Tls.pas',
+  LibreSsl.TlsApi in 'Units\LibreSsl.TlsApi.pas',
+  LibreSsl.TlsConfig in 'Units\LibreSsl.TlsConfig.pas',
+  LibreSsl.TlsPeerCert in 'Units\LibreSsl.TlsPeerCert.pas';
 
 end.
+

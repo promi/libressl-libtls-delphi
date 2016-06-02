@@ -40,11 +40,9 @@ uses
   Winapi.Windows,
   Winapi.Winsock,
   Spring.Collections,
-  LibreSsl.Interfaces in 'LibreSsl.Interfaces.pas',
-  LibreSsl.Tls in 'LibreSsl.Tls.pas',
-  LibreSsl.TlsApi in 'LibreSsl.TlsApi.pas',
-  LibreSsl.TlsConfig in 'LibreSsl.TlsConfig.pas',
-  LibreSsl.TlsPeerCert in 'LibreSsl.TlsPeerCert.pas',
+  LibreSsl.Interfaces,
+  LibreSsl.Tls,
+  LibreSsl.TlsConfig,
   Utils in 'Utils.pas';
 
 procedure AcceptClient(const ATls: ITls);
