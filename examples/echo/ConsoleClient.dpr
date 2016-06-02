@@ -39,7 +39,7 @@ uses
   System.SysUtils,
   LibreSsl.Interfaces,
   LibreSsl.Tls,
-  LibreSsl.TlsConfig',
+  LibreSsl.TlsConfig,
   Utils in 'Utils.pas';
 
 procedure Client;
