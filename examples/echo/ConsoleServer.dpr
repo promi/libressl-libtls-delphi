@@ -51,24 +51,15 @@ procedure AcceptClient(const ATls: ITls);
 const
   GreetingMsg = 'HELLO TLS CLIENT!'#10;
 var
-  Buffer: TBytes;
-  Len: NativeInt;
+  S: string;
 begin
-  ATls.Write(TEncoding.ASCII.GetBytes(GreetingMsg));
-  Len := -1;
-  while Len <> 0 do
+  WriteUtf8String(ATls, GreetingMsg);
+  Log('Read greeting: ' + ReadUtf8String(ATls));
+  while True do
   begin
-    // Read from client
-    SetLength(Buffer, 1000);
-    Len := ATls.Read(Buffer);
-    if Len <> 0 then
-    begin
-      SetLength(Buffer, Len);
-      // Log to console
-      Log(Trim(TEncoding.ASCII.GetString(Buffer)));
-      // Write back to client
-      ATls.Write(Buffer);
-    end;
+    S := ReadUtf8String(ATls);
+    Log('Echoing: ' + S);
+    WriteUtf8String(ATls, S);
   end;
 end;
 
@@ -110,7 +101,7 @@ begin
   B := bind(Sock, Server, SizeOf(Server));
   if B < 0 then
   begin
-    raise Exception.Create('bind error'#10);
+    raise Exception.Create('bind error');
   end;
   Log('bind');
   listen(Sock, 10);
@@ -127,12 +118,15 @@ begin
       try
         AcceptClient(Tls.AcceptSocket(SC));
       except
-        on E: ETlsError do begin
-          LogFmt('client disconnected: %s', [E.Message])
+        on E: ETlsError do
+        begin
+          LogFmt('Client disconnected: %s', [E.Message])
         end;
       end;
       shutdown(SC, 0);
+      Log('shutdown');
       closesocket(SC);
+      Log('closesocket');
     end;
   end;
 end;
@@ -142,7 +136,12 @@ begin
     Server;
   except
     on E: Exception do
+    begin
       Writeln(E.ClassName, ': ', E.Message);
+    end;
   end;
+  WriteLn('Press enter to exit');
+  ReadLn;
 
 end.
+

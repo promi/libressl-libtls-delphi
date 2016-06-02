@@ -30,61 +30,73 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 }
 
-program ConsoleClient;
+unit Utils;
 
-{$APPTYPE CONSOLE}
-{$R *.res}
+interface
 
 uses
   System.SysUtils,
-  LibreSsl.Interfaces in 'LibreSsl.Interfaces.pas',
-  LibreSsl.Tls in 'LibreSsl.Tls.pas',
-  LibreSsl.TlsApi in 'LibreSsl.TlsApi.pas',
-  LibreSsl.TlsConfig in 'LibreSsl.TlsConfig.pas',
-  LibreSsl.TlsPeerCert in 'LibreSsl.TlsPeerCert.pas',
-  Utils in 'Utils.pas';
+  Spring.Collections,
+  LibreSsl.Interfaces;
 
-procedure Client;
-const
-  GreetingMsg = 'HELLO TLS SERVER!'#10;
+function Intercalate(const AItems: IList<string>;
+  const ADelimiter: string): string;
+procedure Log(const AMsg: string);
+procedure LogFmt(const AMsg: string; const AArgs: array of const);
+function ReadUtf8String(const ATls: ITls): string;
+procedure WriteUtf8String(const ATls: ITls; const S: string);
+
+implementation
+
+function ReadUtf8String(const ATls: ITls): string;
 var
-  Config: ITLsConfig;
-  Tls: ITLs;
-  S: string;
+  Buffer: TBytes;
+  Len: NativeInt;
 begin
-  Config := TTlsConfig.Create as ITLsConfig;
-  Config.InsecureNoverifycert;
-  Config.InsecureNoverifyname;
-
-  Tls := TTls.Create(False, Config);
-  Tls.Connect('localhost', '9000');
-  WriteUtf8String(Tls, GreetingMsg);
-  WriteLn(Trim(ReadUtf8String(Tls)));
-
-  while True do
+  SetLength(Buffer, 1000);
+  Len := ATls.Read(Buffer);
+  SetLength(Buffer, Len);
+  if Len = 0 then
   begin
-    ReadLn(S);
-    if Trim(S) = '' then
-    begin
-      Break;
-    end;
-    WriteUtf8String(Tls, S);
-    Log(ReadUtf8String(Tls));
+    raise ETlsError.Create('No more data');
   end;
-
-  Tls.Close;
+  Result := TEncoding.UTF8.GetString(Buffer);
 end;
 
+procedure WriteUtf8String(const ATls: ITls; const S: string);
 begin
-  try
-    Client;
-  except
-    on E: Exception do
+  if S = '' then
+  begin
+    raise ETlsError.Create('No data to send');
+  end;
+  ATls.Write(TEncoding.UTF8.GetBytes(S));
+end;
+
+function Intercalate(const AItems: IList<string>;
+  const ADelimiter: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  if AItems.Count <> 0 then
+  begin
+    Result := AItems[0];
+    for I := 1 to AItems.Count - 1 do
     begin
-      WriteLn(E.ClassName, ': ', E.Message);
+      Result := Result + ADelimiter + AItems[I];
     end;
   end;
-  WriteLn('Press enter to exit');
-  ReadLn;
+end;
+
+procedure Log(const AMsg: string);
+begin
+  WriteLn(Trim(AMsg));
+end;
+
+procedure LogFmt(const AMsg: string; const AArgs: array of const);
+begin
+  Log(Format(AMsg, AArgs));
+end;
 
 end.
+
