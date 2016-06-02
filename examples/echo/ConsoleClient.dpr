@@ -59,7 +59,7 @@ begin
   Tls := TTls.Create(False, Config);
   Tls.Connect('localhost', '9000');
   WriteUtf8String(Tls, GreetingMsg);
-  WriteLn(Trim(ReadUtf8String(Tls)));
+  Log(ReadUtf8String(Tls));
 
   while True do
   begin
